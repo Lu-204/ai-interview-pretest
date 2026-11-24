@@ -1,0 +1,426 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 面試前測</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 30px 16px;
+      font-family: -apple-system, BlinkMacSystemFont,
+        "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: #f5f6f8;
+      color: #263238;
+      line-height: 1.7;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 36px 28px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #667085;
+      margin-bottom: 30px;
+    }
+
+    .notice {
+      background: #f4f7fb;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 24px;
+    }
+
+    .notice h3 {
+      margin-top: 0;
+    }
+
+    .notice ul {
+      padding-left: 22px;
+      margin-bottom: 0;
+    }
+
+    button, .form-button {
+      display: block;
+      width: 100%;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 9px;
+      background: #263f60;
+      color: white;
+      font-size: 17px;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover, .form-button:hover {
+      background: #385b83;
+    }
+
+    button:disabled {
+      background: #9aa5b1;
+      cursor: not-allowed;
+    }
+
+    #status {
+      text-align: center;
+      margin: 20px 0;
+      color: #526174;
+    }
+
+    #videoSection {
+      display: none;
+      margin-top: 30px;
+    }
+
+    .video-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      margin: 18px 0;
+      background: #111;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .video-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .form-button {
+      margin-top: 22px;
+      background: #28765c;
+    }
+
+    .form-button:hover {
+      background: #35906f;
+    }
+
+    .small-text {
+      color: #77818e;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .error {
+      color: #b42318 !important;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 10px auto;
+        padding: 26px 18px;
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+
+    <h1>AI 面試前測</h1>
+
+    <p class="subtitle">
+      歡迎參與本次學術研究前測
+    </p>
+
+    <section class="notice">
+      <h3>填答說明</h3>
+      <ul>
+        <li>本次前測將由系統隨機分派一支 AI 面試影片。</li>
+        <li>請完整觀看系統分派的影片。</li>
+        <li>觀看完畢後，請點擊下方按鈕填寫問卷。</li>
+        <li>請依照實際觀看影片後的感受回答。</li>
+        <li>本研究資料僅供學術研究使用。</li>
+      </ul>
+    </section>
+
+    <button id="startButton" onclick="startAssignment()">
+      開始前測
+    </button>
+
+    <p id="status" aria-live="polite">
+      請點擊上方按鈕開始前測。
+    </p>
+
+    <section id="videoSection">
+
+      <h2>請觀看以下 AI 面試影片</h2>
+
+      <p>
+        請完整觀看影片，再進入下一步填寫問卷。
+      </p>
+
+      <div class="video-frame">
+        <iframe
+          id="videoPlayer"
+          src=""
+          allow="autoplay; fullscreen"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <a
+        id="formLink"
+        class="form-button"
+        href="#"
+        target="_blank"
+        rel="noopener noreferrer">
+        看完影片，開始填寫問卷
+      </a>
+
+    </section>
+
+    <p class="small-text">
+      感謝您撥冗參與本次研究。
+    </p>
+
+  </main>
+
+  <script>
+    // =====================================
+    // 1. 系統設定
+    // =====================================
+
+    const APPS_SCRIPT_URL =
+      "https://script.google.com/macros/s/AKfycbxE2Vs4HSCukF_AB77pVjWziHJ-5BnK7R1dkJYNVpb8dvFxuIB_qgQiL1n_u2VjRoDo/exec";
+
+    const FORM_BASE_URL =
+      "https://docs.google.com/forms/d/e/1FAIpQLSf23fDMxK2AlWMFWdguBx0BOoNI502Qa6gW4gNFYx-QGWv9yQ/viewform?usp=pp_url";
+
+    const FORM_ENTRY_ID = "entry.1390706910";
+
+
+    // =====================================
+    // 2. 產生或取得受測者編號
+    // =====================================
+
+    function createParticipantId() {
+
+      let participantId =
+        sessionStorage.getItem("participantId");
+
+      if (!participantId) {
+
+        if (crypto.randomUUID) {
+          participantId = "P_" + crypto.randomUUID();
+        } else {
+          participantId =
+            "P_" + Date.now() + "_" +
+            Math.random().toString(36).slice(2, 10);
+        }
+
+        sessionStorage.setItem(
+          "participantId",
+          participantId
+        );
+      }
+
+      return participantId;
+    }
+
+
+    // =====================================
+    // 3. 建立 Google Forms 預填網址
+    // =====================================
+
+    function createFormUrl(participantId) {
+
+      const url = new URL(FORM_BASE_URL);
+
+      url.searchParams.set(
+        FORM_ENTRY_ID,
+        participantId
+      );
+
+      return url.toString();
+    }
+
+
+    // =====================================
+    // 4. 向 Apps Script 請求影片分派
+    // 使用 JSONP，符合目前的後端架構
+    // =====================================
+
+    function requestVideoAssignment(participantId) {
+
+      return new Promise((resolve, reject) => {
+
+        const callbackName = "handleAssignment";
+
+        const script = document.createElement("script");
+
+        let finished = false;
+
+        function cleanup() {
+          clearTimeout(timeout);
+          script.remove();
+          delete window[callbackName];
+        }
+
+        const timeout = setTimeout(() => {
+
+          if (finished) return;
+
+          finished = true;
+          cleanup();
+
+          reject(
+            new Error("系統連線逾時，請稍後再試。")
+          );
+
+        }, 20000);
+
+
+        window[callbackName] = function(data) {
+
+          if (finished) return;
+
+          finished = true;
+          cleanup();
+
+          if (!data || !data.success || !data.videoUrl) {
+            reject(
+              new Error(
+                data?.message || "影片分派失敗，請重新操作。"
+              )
+            );
+            return;
+          }
+
+          resolve(data);
+        };
+
+
+        const params = new URLSearchParams({
+          action: "assign",
+          participantId: participantId,
+          callback: callbackName,
+          _: Date.now().toString()
+        });
+
+        script.src =
+          APPS_SCRIPT_URL + "?" + params.toString();
+
+        script.onerror = function() {
+
+          if (finished) return;
+
+          finished = true;
+          cleanup();
+
+          reject(
+            new Error("無法連接分派系統，請稍後再試。")
+          );
+        };
+
+        document.body.appendChild(script);
+
+      });
+    }
+
+
+    // =====================================
+    // 5. 開始前測
+    // =====================================
+
+    async function startAssignment() {
+
+      const startButton =
+        document.getElementById("startButton");
+
+      const status =
+        document.getElementById("status");
+
+      const videoSection =
+        document.getElementById("videoSection");
+
+      const videoPlayer =
+        document.getElementById("videoPlayer");
+
+      const formLink =
+        document.getElementById("formLink");
+
+
+      startButton.disabled = true;
+
+      status.classList.remove("error");
+
+      status.textContent =
+        "系統正在為您分派 AI 面試影片，請稍候……";
+
+
+      try {
+
+        // 取得同一工作階段的受測者編號
+        const participantId = createParticipantId();
+
+        // 向 Apps Script 取得影片
+        const result =
+          await requestVideoAssignment(participantId);
+
+        // 顯示分派的影片
+        videoPlayer.src = result.videoUrl;
+
+        // 將同一編號帶入 Google Forms
+        formLink.href =
+          createFormUrl(participantId);
+
+        videoSection.style.display = "block";
+
+        status.textContent =
+          "影片分派成功！請完整觀看下方影片。";
+
+        // 避免重複點擊造成重複操作
+        startButton.style.display = "none";
+
+        // 捲動至影片區域
+        videoSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+
+      } catch (error) {
+
+        status.textContent =
+          error.message || "系統發生錯誤，請稍後再試。";
+
+        status.classList.add("error");
+
+        startButton.disabled = false;
+      }
+    }
+
+  </script>
+
+</body>
+</html>
